@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highway Racing Game</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <!-- Embed Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Game Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Basic Setup for Three.js
+        let scene, camera, renderer, car, road, aiCars = [];
+        let gamePaused = false;
+
+        // Initialize the game scene
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gameCanvas') });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Add the road (for simplicity, it's a basic plane)
+            let roadGeometry = new THREE.PlaneGeometry(500, 10000);
+            let roadMaterial = new THREE.MeshBasicMaterial({ color: 0x555555 });
+            road = new THREE.Mesh(roadGeometry, roadMaterial);
+            road.rotation.x = -Math.PI / 2;
+            road.position.y = -5;
+            scene.add(road);
+
+            // Add the player car (basic cube for now)
+            let carGeometry = new THREE.BoxGeometry(5, 3, 10);
+            let carMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+            car = new THREE.Mesh(carGeometry, carMaterial);
+            car.position.set(0, 0, 0);
+            scene.add(car);
+
+            // Set camera position
+            camera.position.z = 50;
+            camera.position.y = 20;
+
+            // Lighting
+            let light = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(light);
+
+            // Resize handling
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Create some AI cars for the race
+            createAICars();
+
+            animate();
+        }
+
+        // Create AI cars
+        function createAICars() {
+            for (let i = 0; i < 5; i++) {
+                let aiCarGeometry = new THREE.BoxGeometry(5, 3, 10);
+                let aiCarMaterial = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
+                let aiCar = new THREE.Mesh(aiCarGeometry, aiCarMaterial);
+                aiCar.position.set(Math.random() * 50 - 25, 0, -100 * (i + 1));
+                aiCars.push(aiCar);
+                scene.add(aiCar);
+            }
+        }
+
+        // Resize event handler
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Game animation loop
+        function animate() {
+            if (!gamePaused) {
+                requestAnimationFrame(animate);
+            }
+
+            // Move player car based on user input (just W, A, S, D for now)
+            if (keys['w']) car.position.z -= 1;
+            if (keys['s']) car.position.z += 1;
+            if (keys['a']) car.position.x -= 1;
+            if (keys['d']) car.position.x += 1;
+
+            // Update AI cars
+            aiCars.forEach(aiCar => {
+                aiCar.position.z += 0.5;
+                if (aiCar.position.z > 0) aiCar.position.z = -100;
+            });
+
+            // Render the scene
+            renderer.render(scene, camera);
+        }
+
+        // Key press detection
+        let keys = {};
+        window.addEventListener('keydown', function (e) {
+            keys[e.key] = true;
+        });
+        window.addEventListener('keyup', function (e) {
+            keys[e.key] = false;
+        });
+
+        // Start the game
+        init();
+    </script>
+</body>
+</html>
